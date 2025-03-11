@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Europe Borders Only</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #map {
+            width: 100%;
+            height: 100vh;
+        }
+
+        #score {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: white;
+            padding: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 5px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="score">Score: <span id="score-value">0</span></div>
+    <div id="map"></div>
+
+    <!-- Leaflet JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+
+    <script>
+        let score = 0;
+        function updateScore(points) {
+            score += points;
+            document.getElementById('score-value').textContent = score;
+        }
+
+        const map = L.map('map', {
+            center: [50, 10],
+            zoom: 4,
+            zoomControl: true,
+            dragging: true,
+            boxZoom: true,
+            doubleClickZoom: true,
+            scrollWheelZoom: true,
+            touchZoom: true
+        });
+
+        const countryStatus = {}; // Track answered countries
+
+        fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
+            .then(response => response.json())
+            .then(data => {
+                L.geoJSON(data, {
+                    style: {
+                        color: '#000',
+                        weight: 1,
+                        opacity: 1,
+                        fillOpacity: 0
+                    },
+                    onEachFeature: function (feature, layer) {
+                        if (feature.properties && feature.properties.name) {
+                            const countryName = feature.properties.name;
+                            countryStatus[countryName] = false; // Initially not answered
+                            layer.on('click', function () {
+                                if (countryStatus[countryName]) return; // Prevent reopening if answered
+
+                                const popupContent = document.createElement('div');
+                                popupContent.innerHTML = `
+                                    <label for='input-${countryName}'>Enter country name:</label>
+                                    <input type='text' id='input-${countryName}' name='input-${countryName}' />
+                                    <button>Submit</button>
+                                    <p id='result-${countryName}'></p>
+                                `;
+
+                                const inputElement = popupContent.querySelector(`input`);
+                                const buttonElement = popupContent.querySelector(`button`);
+
+                                const closePopup = () => {
+                                    map.closePopup();
+                                };
+
+                                buttonElement.onclick = () => {
+                                    checkCountry(countryName, layer);
+                                    closePopup();
+                                };
+
+                                inputElement.addEventListener('keypress', (event) => {
+                                    if (event.key === 'Enter') {
+                                        checkCountry(countryName, layer);
+                                        closePopup();
+                                    }
+                                });
+
+                                layer.bindPopup(popupContent).openPopup();
+                            });
+                            layer.countryLayer = layer; // Store reference to layer
+                        }
+                    }
+                }).addTo(map);
+            })
+            .catch(error => {
+                console.error('Error loading GeoJSON data:', error);
+                document.getElementById('map').innerHTML = '<p>Error loading map data. Please try again later.</p>';
+            });
+
+        function checkCountry(countryName, layer) {
+            const inputElement = document.getElementById(`input-${countryName}`);
+            const resultElement = document.getElementById(`result-${countryName}`);
+            if (inputElement) {
+                const userInput = inputElement.value.trim().toLowerCase();
+                const correctName = countryName.trim().toLowerCase();
+                const isCorrect = userInput === correctName;
+                resultElement.textContent = correctName;
+
+                map.eachLayer(l => {
+                    if (l.feature && l.feature.properties.name === countryName) {
+                        l.setStyle({
+                            fillColor: isCorrect ? 'green' : 'red',
+                            fillOpacity: 0.5
+                        });
+                        countryStatus[countryName] = true; // Mark as answered  
+                        l.unbindPopup(); // Remove popup binding
+
+                        // Add flag marker
+                        if (isCorrect) {
+                            const flagUrl = `https://flagcdn.com/w40/${countryName.toLowerCase().replace(/ /g, '-')}.png`;
+                            const flagIcon = L.icon({
+                                iconUrl: flagUrl,
+                                iconSize: [40, 30],
+                                iconAnchor: [20, 15]
+                            });
+                            L.marker(l.getBounds().getCenter(), { icon: flagIcon }).addTo(map);
+                        }
+                    }
+                });
+
+                updateScore(isCorrect ? 1 : -1);
+            }
+        }
+    </script>
+</body>
+
+</html>
