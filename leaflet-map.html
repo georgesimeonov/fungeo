@@ -323,6 +323,7 @@
         });
 
         const countryStatus = {}; // Track answered countries
+        const userGuesses = {}; // Store user's guesses for each country
 
         fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
             .then(response => response.json())
@@ -339,7 +340,18 @@
                             const countryName = feature.properties.name;
                             countryStatus[countryName] = false; // Initially not answered
                             layer.on('click', function () {
-                                if (countryStatus[countryName]) return; // Prevent reopening if answered
+                                // If already answered, show popup with correct name and user's guess
+                                if (countryStatus[countryName]) {
+                                    const userGuess = userGuesses[countryName] || "No guess";
+                                    const popupContent = `
+                                        <div>
+                                            <p><strong>Country:</strong> ${countryName}</p>
+                                            <p><strong>Your guess:</strong> ${userGuess}</p>
+                                        </div>
+                                    `;
+                                    layer.bindPopup(popupContent).openPopup();
+                                    return;
+                                }
 
                                 const popupContent = document.createElement('div');
                                 popupContent.innerHTML = `
@@ -388,6 +400,9 @@
                 const correctName = countryName.trim().toLowerCase();
                 const isCorrect = userInput === correctName;
                 resultElement.textContent = correctName;
+
+                // Store the user's guess
+                userGuesses[countryName] = userInput;
 
                 map.eachLayer(l => {
                     if (l.feature && l.feature.properties.name === countryName) {
