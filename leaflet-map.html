@@ -51,6 +51,204 @@
             document.getElementById('score-value').textContent = score;
         }
 
+        // Country name to ISO code mapping
+        const countryToISOCode = {
+            "Afghanistan": "af",
+            "Albania": "al",
+            "Algeria": "dz",
+            "Andorra": "ad",
+            "Angola": "ao",
+            "Argentina": "ar",
+            "Armenia": "am",
+            "Australia": "au",
+            "Austria": "at",
+            "Azerbaijan": "az",
+            "Bahamas": "bs",
+            "Bangladesh": "bd",
+            "Belarus": "by",
+            "Belgium": "be",
+            "Belize": "bz",
+            "Benin": "bj",
+            "Bhutan": "bt",
+            "Bolivia": "bo",
+            "Bosnia and Herzegovina": "ba",
+            "Botswana": "bw",
+            "Brazil": "br",
+            "Brunei": "bn",
+            "Bulgaria": "bg",
+            "Burkina Faso": "bf",
+            "Burundi": "bi",
+            "Cambodia": "kh",
+            "Cameroon": "cm",
+            "Canada": "ca",
+            "Cape Verde": "cv",
+            "Central African Republic": "cf",
+            "Chad": "td",
+            "Chile": "cl",
+            "China": "cn",
+            "Colombia": "co",
+            "Comoros": "km",
+            "Congo": "cg",
+            "Costa Rica": "cr",
+            "Croatia": "hr",
+            "Cuba": "cu",
+            "Cyprus": "cy",
+            "Czech Republic": "cz",
+            "Democratic Republic of the Congo": "cd",
+            "Denmark": "dk",
+            "Djibouti": "dj",
+            "Dominican Republic": "do",
+            "Ecuador": "ec",
+            "Egypt": "eg",
+            "El Salvador": "sv",
+            "Equatorial Guinea": "gq",
+            "Eritrea": "er",
+            "Estonia": "ee",
+            "Ethiopia": "et",
+            "Fiji": "fj",
+            "Finland": "fi",
+            "France": "fr",
+            "Gabon": "ga",
+            "Gambia": "gm",
+            "Georgia": "ge",
+            "Germany": "de",
+            "Ghana": "gh",
+            "Greece": "gr",
+            "Greenland": "gl",
+            "Guatemala": "gt",
+            "Guinea": "gn",
+            "Guinea-Bissau": "gw",
+            "Guyana": "gy",
+            "Haiti": "ht",
+            "Honduras": "hn",
+            "Hungary": "hu",
+            "Iceland": "is",
+            "India": "in",
+            "Indonesia": "id",
+            "Iran": "ir",
+            "Iraq": "iq",
+            "Ireland": "ie",
+            "Israel": "il",
+            "Italy": "it",
+            "Ivory Coast": "ci",
+            "Jamaica": "jm",
+            "Japan": "jp",
+            "Jordan": "jo",
+            "Kazakhstan": "kz",
+            "Kenya": "ke",
+            "Kosovo": "xk",
+            "Kuwait": "kw",
+            "Kyrgyzstan": "kg",
+            "Laos": "la",
+            "Latvia": "lv",
+            "Lebanon": "lb",
+            "Lesotho": "ls",
+            "Liberia": "lr",
+            "Libya": "ly",
+            "Liechtenstein": "li",
+            "Lithuania": "lt",
+            "Luxembourg": "lu",
+            "Macedonia": "mk",
+            "North Macedonia": "mk",
+            "Madagascar": "mg",
+            "Malawi": "mw",
+            "Malaysia": "my",
+            "Maldives": "mv",
+            "Mali": "ml",
+            "Malta": "mt",
+            "Mauritania": "mr",
+            "Mauritius": "mu",
+            "Mexico": "mx",
+            "Moldova": "md",
+            "Monaco": "mc",
+            "Mongolia": "mn",
+            "Montenegro": "me",
+            "Morocco": "ma",
+            "Mozambique": "mz",
+            "Myanmar": "mm",
+            "Namibia": "na",
+            "Nepal": "np",
+            "Netherlands": "nl",
+            "New Zealand": "nz",
+            "Nicaragua": "ni",
+            "Niger": "ne",
+            "Nigeria": "ng",
+            "North Korea": "kp",
+            "Norway": "no",
+            "Oman": "om",
+            "Pakistan": "pk",
+            "Palestine": "ps",
+            "Panama": "pa",
+            "Papua New Guinea": "pg",
+            "Paraguay": "py",
+            "Peru": "pe",
+            "Philippines": "ph",
+            "Poland": "pl",
+            "Portugal": "pt",
+            "Qatar": "qa",
+            "Romania": "ro",
+            "Russia": "ru",
+            "Rwanda": "rw",
+            "Saudi Arabia": "sa",
+            "Senegal": "sn",
+            "Serbia": "rs",
+            "Sierra Leone": "sl",
+            "Singapore": "sg",
+            "Slovakia": "sk",
+            "Slovenia": "si",
+            "Somalia": "so",
+            "South Africa": "za",
+            "South Korea": "kr",
+            "South Sudan": "ss",
+            "Spain": "es",
+            "Sri Lanka": "lk",
+            "Sudan": "sd",
+            "Suriname": "sr",
+            "Swaziland": "sz",
+            "Eswatini": "sz",
+            "Sweden": "se",
+            "Switzerland": "ch",
+            "Syria": "sy",
+            "Taiwan": "tw",
+            "Tajikistan": "tj",
+            "Tanzania": "tz",
+            "Thailand": "th",
+            "Timor-Leste": "tl",
+            "Togo": "tg",
+            "Trinidad and Tobago": "tt",
+            "Tunisia": "tn",
+            "Turkey": "tr",
+            "Turkmenistan": "tm",
+            "Uganda": "ug",
+            "Ukraine": "ua",
+            "United Arab Emirates": "ae",
+            "United Kingdom": "gb",
+            "United States": "us",
+            "United States of America": "us",
+            "Uruguay": "uy",
+            "Uzbekistan": "uz",
+            "Venezuela": "ve",
+            "Vietnam": "vn",
+            "Western Sahara": "eh",
+            "Yemen": "ye",
+            "Zambia": "zm",
+            "Zimbabwe": "zw"
+        };
+
+        // Function to get the correct flag URL using ISO codes
+        function getCountryFlagURL(countryName) {
+            // Try to find the ISO code for the country
+            const isoCode = countryToISOCode[countryName];
+
+            if (isoCode) {
+                return `https://flagcdn.com/w40/${isoCode}.png`;
+            } else {
+                // Fallback to the original approach (which doesn't work)
+                console.warn(`Warning: No ISO code found for ${countryName}, using fallback method`);
+                return `https://flagcdn.com/w40/${countryName.toLowerCase().replace(/ /g, '-')}.png`;
+            }
+        }
+
         const map = L.map('map', {
             center: [50, 10],
             zoom: 4,
@@ -60,6 +258,68 @@
             doubleClickZoom: true,
             scrollWheelZoom: true,
             touchZoom: true
+        });
+
+        // Add the Leaflet.GeometryUtil extension for area calculations
+        L.GeometryUtil = {
+            // Calculate approximate area of a polygon
+            geodesicArea: function (latLngs) {
+                let area = 0;
+                const d2r = Math.PI / 180;
+                let p1, p2;
+
+                for (let i = 0, len = latLngs.length, j = len - 1; i < len; j = i++) {
+                    const p1 = latLngs[i];
+                    const p2 = latLngs[j];
+                    area += ((p2.lng - p1.lng) * d2r) *
+                        (2 + Math.sin(p1.lat * d2r) + Math.sin(p2.lat * d2r));
+                }
+                return Math.abs(area * 6378137.0 * 6378137.0 / 2.0);
+            }
+        };
+
+        // Initialize flag markers array
+        window.flagMarkers = [];
+
+        // Add zoom handler to resize all flags when zooming
+        map.on('zoomend', function () {
+            const zoom = map.getZoom();
+            // Calculate size based on zoom level
+            window.flagMarkers.forEach(flag => {
+                // Base size depends on country size
+                const baseSize = flag.isSmallCountry ? [20, 15] : [30, 22];
+
+                // Hide flags completely when zoomed out too far (zoom level 2 or lower)
+                if (zoom <= 2) {
+                    flag.marker.setOpacity(0);
+                    return;
+                } else {
+                    flag.marker.setOpacity(1);
+                }
+
+                // Scale factor based on zoom (bigger at higher zoom levels)
+                let scale = 1.0;
+                if (zoom > 4) {
+                    // Increase size when zooming in
+                    scale = 1.0 + ((zoom - 4) * 0.12);
+                } else if (zoom < 4) {
+                    // Decrease size more aggressively when zooming out
+                    scale = 1.0 - ((4 - zoom) * 0.25);
+                }
+
+                // Calculate new size with lower minimum size
+                const newWidth = Math.max(6, Math.min(50, baseSize[0] * scale));
+                const newHeight = Math.max(4, Math.min(37, baseSize[1] * scale));
+
+                // Update the icon
+                const newIcon = L.icon({
+                    iconUrl: flag.url,
+                    iconSize: [newWidth, newHeight],
+                    iconAnchor: [newWidth / 2, newHeight / 2]
+                });
+
+                flag.marker.setIcon(newIcon);
+            });
         });
 
         const countryStatus = {}; // Track answered countries
@@ -138,16 +398,64 @@
                         countryStatus[countryName] = true; // Mark as answered  
                         l.unbindPopup(); // Remove popup binding
 
-                        // Add flag marker
-                        if (isCorrect) {
-                            const flagUrl = `https://flagcdn.com/w40/${countryName.toLowerCase().replace(/ /g, '-')}.png`;
-                            const flagIcon = L.icon({
-                                iconUrl: flagUrl,
-                                iconSize: [40, 30],
-                                iconAnchor: [20, 15]
-                            });
-                            L.marker(l.getBounds().getCenter(), { icon: flagIcon }).addTo(map);
+                        // Add flag marker for both correct and incorrect guesses
+                        const flagUrl = getCountryFlagURL(countryName);
+
+                        // Store all flag markers in a global array for easy access
+                        if (!window.flagMarkers) {
+                            window.flagMarkers = [];
                         }
+
+                        // For smaller countries, use a smaller flag initially
+                        const countryArea = L.GeometryUtil.geodesicArea(l.getLatLngs()[0]);
+                        // Create size tiers for different country sizes
+                        let countrySizeTier;
+                        if (countryArea < 500000) {
+                            countrySizeTier = "tiny";
+                        } else if (countryArea < 1000000) {
+                            countrySizeTier = "small";
+                        } else if (countryArea < 5000000) {
+                            countrySizeTier = "medium";
+                        } else {
+                            countrySizeTier = "large";
+                        }
+
+                        // Initial size based on country size tiers
+                        let initialSize;
+                        switch (countrySizeTier) {
+                            case "tiny":
+                                initialSize = [12, 9];
+                                break;
+                            case "small":
+                                initialSize = [16, 12];
+                                break;
+                            case "medium":
+                                initialSize = [20, 15];
+                                break;
+                            case "large":
+                                initialSize = [24, 18];
+                                break;
+                        }
+
+                        // Store the country size information
+                        const smallCountry = countrySizeTier === "tiny" || countrySizeTier === "small";
+
+                        // Create the icon with appropriate size
+                        const flagIcon = L.icon({
+                            iconUrl: flagUrl,
+                            iconSize: initialSize,
+                            iconAnchor: [initialSize[0] / 2, initialSize[1] / 2]
+                        });
+
+                        // Add the marker to the map
+                        const flagMarker = L.marker(l.getBounds().getCenter(), { icon: flagIcon }).addTo(map);
+
+                        // Store marker info for zoom handling
+                        window.flagMarkers.push({
+                            marker: flagMarker,
+                            url: flagUrl,
+                            isSmallCountry: smallCountry
+                        });
                     }
                 });
 
