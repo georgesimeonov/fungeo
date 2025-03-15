@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Europe Borders Only</title>
+    <title>Geography Quiz - Country Mode</title>
 
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
@@ -26,7 +26,7 @@
         #score {
             position: absolute;
             top: 10px;
-            left: 10px;
+            right: 10px;
             background: white;
             padding: 10px;
             font-size: 18px;
@@ -34,15 +34,38 @@
             border-radius: 5px;
             z-index: 1000;
         }
+
+        #home-button {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: white;
+            padding: 8px 12px;
+            font-size: 14px;
+            border-radius: 5px;
+            z-index: 1000;
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        #home-button:hover {
+            background: #f0f0f0;
+        }
     </style>
 </head>
 
 <body>
     <div id="score">Score: <span id="score-value">0</span></div>
+    <a href="index.html" id="home-button">← Back to Menu</a>
     <div id="map"></div>
 
     <!-- Leaflet JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+
+    <!-- Country Codes -->
+    <script src="country-codes.js"></script>
 
     <script>
         let score = 0;
@@ -51,189 +74,7 @@
             document.getElementById('score-value').textContent = score;
         }
 
-        // Country name to ISO code mapping
-        const countryToISOCode = {
-            "Afghanistan": "af",
-            "Albania": "al",
-            "Algeria": "dz",
-            "Andorra": "ad",
-            "Angola": "ao",
-            "Argentina": "ar",
-            "Armenia": "am",
-            "Australia": "au",
-            "Austria": "at",
-            "Azerbaijan": "az",
-            "Bahamas": "bs",
-            "Bangladesh": "bd",
-            "Belarus": "by",
-            "Belgium": "be",
-            "Belize": "bz",
-            "Benin": "bj",
-            "Bhutan": "bt",
-            "Bolivia": "bo",
-            "Bosnia and Herzegovina": "ba",
-            "Botswana": "bw",
-            "Brazil": "br",
-            "Brunei": "bn",
-            "Bulgaria": "bg",
-            "Burkina Faso": "bf",
-            "Burundi": "bi",
-            "Cambodia": "kh",
-            "Cameroon": "cm",
-            "Canada": "ca",
-            "Cape Verde": "cv",
-            "Central African Republic": "cf",
-            "Chad": "td",
-            "Chile": "cl",
-            "China": "cn",
-            "Colombia": "co",
-            "Comoros": "km",
-            "Congo": "cg",
-            "Costa Rica": "cr",
-            "Croatia": "hr",
-            "Cuba": "cu",
-            "Cyprus": "cy",
-            "Czech Republic": "cz",
-            "Democratic Republic of the Congo": "cd",
-            "Denmark": "dk",
-            "Djibouti": "dj",
-            "Dominican Republic": "do",
-            "Ecuador": "ec",
-            "Egypt": "eg",
-            "El Salvador": "sv",
-            "Equatorial Guinea": "gq",
-            "Eritrea": "er",
-            "Estonia": "ee",
-            "Ethiopia": "et",
-            "Fiji": "fj",
-            "Finland": "fi",
-            "France": "fr",
-            "Gabon": "ga",
-            "Gambia": "gm",
-            "Georgia": "ge",
-            "Germany": "de",
-            "Ghana": "gh",
-            "Greece": "gr",
-            "Greenland": "gl",
-            "Guatemala": "gt",
-            "Guinea": "gn",
-            "Guinea-Bissau": "gw",
-            "Guyana": "gy",
-            "Haiti": "ht",
-            "Honduras": "hn",
-            "Hungary": "hu",
-            "Iceland": "is",
-            "India": "in",
-            "Indonesia": "id",
-            "Iran": "ir",
-            "Iraq": "iq",
-            "Ireland": "ie",
-            "Israel": "il",
-            "Italy": "it",
-            "Ivory Coast": "ci",
-            "Jamaica": "jm",
-            "Japan": "jp",
-            "Jordan": "jo",
-            "Kazakhstan": "kz",
-            "Kenya": "ke",
-            "Kosovo": "xk",
-            "Kuwait": "kw",
-            "Kyrgyzstan": "kg",
-            "Laos": "la",
-            "Latvia": "lv",
-            "Lebanon": "lb",
-            "Lesotho": "ls",
-            "Liberia": "lr",
-            "Libya": "ly",
-            "Liechtenstein": "li",
-            "Lithuania": "lt",
-            "Luxembourg": "lu",
-            "Macedonia": "mk",
-            "North Macedonia": "mk",
-            "Madagascar": "mg",
-            "Malawi": "mw",
-            "Malaysia": "my",
-            "Maldives": "mv",
-            "Mali": "ml",
-            "Malta": "mt",
-            "Mauritania": "mr",
-            "Mauritius": "mu",
-            "Mexico": "mx",
-            "Moldova": "md",
-            "Monaco": "mc",
-            "Mongolia": "mn",
-            "Montenegro": "me",
-            "Morocco": "ma",
-            "Mozambique": "mz",
-            "Myanmar": "mm",
-            "Namibia": "na",
-            "Nepal": "np",
-            "Netherlands": "nl",
-            "New Zealand": "nz",
-            "Nicaragua": "ni",
-            "Niger": "ne",
-            "Nigeria": "ng",
-            "North Korea": "kp",
-            "Norway": "no",
-            "Oman": "om",
-            "Pakistan": "pk",
-            "Palestine": "ps",
-            "Panama": "pa",
-            "Papua New Guinea": "pg",
-            "Paraguay": "py",
-            "Peru": "pe",
-            "Philippines": "ph",
-            "Poland": "pl",
-            "Portugal": "pt",
-            "Qatar": "qa",
-            "Romania": "ro",
-            "Russia": "ru",
-            "Rwanda": "rw",
-            "Saudi Arabia": "sa",
-            "Senegal": "sn",
-            "Serbia": "rs",
-            "Sierra Leone": "sl",
-            "Singapore": "sg",
-            "Slovakia": "sk",
-            "Slovenia": "si",
-            "Somalia": "so",
-            "South Africa": "za",
-            "South Korea": "kr",
-            "South Sudan": "ss",
-            "Spain": "es",
-            "Sri Lanka": "lk",
-            "Sudan": "sd",
-            "Suriname": "sr",
-            "Swaziland": "sz",
-            "Eswatini": "sz",
-            "Sweden": "se",
-            "Switzerland": "ch",
-            "Syria": "sy",
-            "Taiwan": "tw",
-            "Tajikistan": "tj",
-            "Tanzania": "tz",
-            "Thailand": "th",
-            "Timor-Leste": "tl",
-            "Togo": "tg",
-            "Trinidad and Tobago": "tt",
-            "Tunisia": "tn",
-            "Turkey": "tr",
-            "Turkmenistan": "tm",
-            "Uganda": "ug",
-            "Ukraine": "ua",
-            "United Arab Emirates": "ae",
-            "United Kingdom": "gb",
-            "United States": "us",
-            "United States of America": "us",
-            "Uruguay": "uy",
-            "Uzbekistan": "uz",
-            "Venezuela": "ve",
-            "Vietnam": "vn",
-            "Western Sahara": "eh",
-            "Yemen": "ye",
-            "Zambia": "zm",
-            "Zimbabwe": "zw"
-        };
+        // countryToISOCode is now imported from country-codes.js
 
         // Function to get the correct flag URL using ISO codes
         function getCountryFlagURL(countryName) {
@@ -415,11 +256,6 @@
 
                         // Add flag marker for both correct and incorrect guesses
                         const flagUrl = getCountryFlagURL(countryName);
-
-                        // Store all flag markers in a global array for easy access
-                        if (!window.flagMarkers) {
-                            window.flagMarkers = [];
-                        }
 
                         // For smaller countries, use a smaller flag initially
                         const countryArea = L.GeometryUtil.geodesicArea(l.getLatLngs()[0]);

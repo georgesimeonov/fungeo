@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geography Quiz - Highlight Mode</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #map {
+            width: 100%;
+            height: 100vh;
+        }
+
+        #score {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 5px;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        #home-button {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: white;
+            padding: 8px 12px;
+            font-size: 14px;
+            border-radius: 5px;
+            z-index: 1000;
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        #home-button:hover {
+            background: #f0f0f0;
+        }
+
+        #guess-container {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            min-width: 300px;
+        }
+
+        #guess-prompt {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        #guess-input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        #submit-guess {
+            padding: 8px 16px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        #submit-guess:hover {
+            background: #2980b9;
+        }
+
+        #next-country {
+            padding: 8px 16px;
+            background: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: none;
+        }
+
+        #next-country:hover {
+            background: #27ae60;
+        }
+
+        #result-message {
+            margin-top: 5px;
+            font-size: 14px;
+            font-weight: bold;
+            min-height: 18px;
+            text-align: center;
+        }
+
+        .correct {
+            color: green;
+        }
+
+        .incorrect {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="score">Score: <span id="score-value">0</span></div>
+    <a href="index.html" id="home-button">← Back to Menu</a>
+    <div id="guess-container">
+        <div id="guess-prompt">Name the highlighted country</div>
+        <input type="text" id="guess-input" placeholder="Enter country name...">
+        <button id="submit-guess">Submit Guess</button>
+        <div id="result-message"></div>
+        <button id="next-country">Next Country</button>
+    </div>
+    <div id="map"></div>
+
+    <!-- Leaflet JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+
+    <!-- Country Codes -->
+    <script src="country-codes.js"></script>
+
+    <script>
+        let score = 0;
+        let currentCountry = null;
+        let countryLayers = {};
+        let availableCountries = [];
+        let geoJsonLayer = null;
+
+        function updateScore(points) {
+            score += points;
+            document.getElementById('score-value').textContent = score;
+        }
+
+        // Shuffle array (Fisher-Yates algorithm)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Reset map to original state
+        function resetMap() {
+            if (geoJsonLayer) {
+                geoJsonLayer.setStyle({
+                    fillColor: '#f0f0f0',
+                    fillOpacity: 0,
+                    color: '#000',
+                    weight: 1,
+                    opacity: 1
+                });
+            }
+        }
+
+        // Choose the next country to guess
+        function selectNextCountry() {
+            // Reset the map
+            resetMap();
+
+            // Clear input and result message
+            document.getElementById('guess-input').value = '';
+            const resultMessage = document.getElementById('result-message');
+            resultMessage.textContent = '';
+            resultMessage.className = '';
+
+            // Hide the next button and show submit button
+            document.getElementById('next-country').style.display = 'none';
+            document.getElementById('submit-guess').style.display = 'block';
+
+            // Re-enable input
+            document.getElementById('guess-input').disabled = false;
+
+            // Select a random country
+            currentCountry = availableCountries[Math.floor(Math.random() * availableCountries.length)];
+
+            // Highlight the selected country on the map
+            if (countryLayers[currentCountry]) {
+                countryLayers[currentCountry].setStyle({
+                    fillColor: '#3498db',
+                    fillOpacity: 0.6
+                });
+
+                // Get bounds of the selected country
+                const countryBounds = countryLayers[currentCountry].getBounds();
+
+                // Determine which continent to focus on based on country coordinates
+                let continentZoom = 4; // Default zoom level for continents
+                let continentCenter = countryBounds.getCenter();
+
+                // Adjust zoom based on continent size and location
+                const lat = continentCenter.lat;
+                const lng = continentCenter.lng;
+
+                // Rough continent determination based on coordinates
+                if (lng > -20 && lng < 40 && lat > 30 && lat < 75) {
+                    // Europe
+                    continentZoom = 4;
+                } else if (lng > -20 && lng < 55 && lat > -40 && lat < 40) {
+                    // Africa
+                    continentZoom = 3;
+                } else if (lng > 55 && lng < 150 && lat > 0 && lat < 55) {
+                    // Asia
+                    continentZoom = 3;
+                } else if (lng > 110 && lng < 180 && lat > -50 && lat < 0) {
+                    // Oceania
+                    continentZoom = 4;
+                } else if (lng > -170 && lng < -30 && lat > 15 && lat < 75) {
+                    // North America
+                    continentZoom = 3;
+                } else if (lng > -90 && lng < -30 && lat > -60 && lat < 15) {
+                    // South America
+                    continentZoom = 3;
+                }
+
+                // Set the view with a gentler zoom level
+                map.setView(continentCenter, continentZoom);
+            }
+        }
+
+        // Handle submit guess
+        function submitGuess() {
+            const guessInput = document.getElementById('guess-input');
+            const userGuess = guessInput.value.trim();
+
+            if (!userGuess) return; // Don't process empty guesses
+
+            const isCorrect = userGuess.toLowerCase() === currentCountry.toLowerCase();
+
+            // Update the score
+            updateScore(isCorrect ? 1 : -1);
+
+            // Show result message
+            const resultMessage = document.getElementById('result-message');
+            if (isCorrect) {
+                resultMessage.textContent = 'Correct!';
+                resultMessage.className = 'correct';
+
+                // Highlight the country in green
+                if (countryLayers[currentCountry]) {
+                    countryLayers[currentCountry].setStyle({
+                        fillColor: 'green',
+                        fillOpacity: 0.6
+                    });
+                }
+            } else {
+                resultMessage.textContent = `Incorrect! That was ${currentCountry}`;
+                resultMessage.className = 'incorrect';
+
+                // Highlight the country in red
+                if (countryLayers[currentCountry]) {
+                    countryLayers[currentCountry].setStyle({
+                        fillColor: 'red',
+                        fillOpacity: 0.6
+                    });
+                }
+            }
+
+            // Disable input and show next button
+            guessInput.disabled = true;
+            document.getElementById('submit-guess').style.display = 'none';
+            document.getElementById('next-country').style.display = 'block';
+        }
+
+        // Event listeners
+        document.getElementById('submit-guess').addEventListener('click', submitGuess);
+        document.getElementById('next-country').addEventListener('click', selectNextCountry);
+
+        // Allow Enter key to submit guess
+        document.getElementById('guess-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                submitGuess();
+            }
+        });
+
+        const map = L.map('map', {
+            center: [20, 0],
+            zoom: 2,
+            zoomControl: true,
+            dragging: true,
+            boxZoom: true,
+            doubleClickZoom: true,
+            scrollWheelZoom: true,
+            touchZoom: true
+        });
+
+        fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
+            .then(response => response.json())
+            .then(data => {
+                geoJsonLayer = L.geoJSON(data, {
+                    style: {
+                        color: '#000',
+                        weight: 1,
+                        opacity: 1,
+                        fillOpacity: 0
+                    },
+                    onEachFeature: function (feature, layer) {
+                        if (feature.properties && feature.properties.name) {
+                            const countryName = feature.properties.name;
+
+                            // Store the country layer for later reference
+                            countryLayers[countryName] = layer;
+
+                            // Add to available countries if it has a valid ISO code
+                            // This ensures we only use countries that we can properly identify
+                            if (countryToISOCode[countryName]) {
+                                availableCountries.push(countryName);
+                            }
+                        }
+                    }
+                }).addTo(map);
+
+                // Shuffle the countries to ensure random selection
+                availableCountries = shuffleArray(availableCountries);
+
+                // Start the game once the map is loaded
+                selectNextCountry();
+            })
+            .catch(error => {
+                console.error('Error loading GeoJSON data:', error);
+                document.getElementById('map').innerHTML = '<p>Error loading map data. Please try again later.</p>';
+            });
+    </script>
+</body>
+
+</html>
