@@ -1,64 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Geography Quiz - Country Mode</title>
+    <title data-i18n="title">Geography Quiz - Country Mode</title>
 
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
 
-    <style>
-        html,
-        body {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            width: 100%;
-        }
-
-        #map {
-            width: 100%;
-            height: 100vh;
-        }
-
-        #score {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: white;
-            padding: 10px;
-            font-size: 18px;
-            font-weight: bold;
-            border-radius: 5px;
-            z-index: 1000;
-        }
-
-        #home-button {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: white;
-            padding: 8px 12px;
-            font-size: 14px;
-            border-radius: 5px;
-            z-index: 1000;
-            text-decoration: none;
-            color: #333;
-            font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        #home-button:hover {
-            background: #f0f0f0;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-    <div id="score">Score: <span id="score-value">0</span></div>
-    <a href="index.html" id="home-button">← Back to Menu</a>
+    <div id="score"><span data-i18n="score-label">Score</span>: <span id="score-value">0</span></div>
+    <a href="index.html" id="home-button" data-i18n="back-button">← Back to Menu</a>
     <div id="map"></div>
 
     <!-- Leaflet JavaScript -->
@@ -67,14 +23,106 @@
     <!-- Country Codes -->
     <script src="country-codes.js"></script>
 
+    <!-- Language Translations -->
+    <script>
+        // Translations for UI elements
+        const translations = {
+            'en': {
+                'title': 'Geography Quiz - Country Mode',
+                'score-label': 'Score',
+                'back-button': '← Back to Menu',
+                'enter-country': 'Enter country name:',
+                'submit': 'Submit',
+                'no-guess': 'No guess',
+                'country-label': 'Country',
+                'your-guess': 'Your guess',
+                'error-message': 'Error loading map data. Please try again later.',
+                'language-name': 'English'
+            },
+            'bg': {
+                'title': 'Географска Викторина - Режим с държави',
+                'score-label': 'Резултат',
+                'back-button': '← Обратно към меню',
+                'enter-country': 'Въведете име на държава:',
+                'submit': 'Изпрати',
+                'no-guess': 'Няма предположение',
+                'country-label': 'Държава',
+                'your-guess': 'Вашето предположение',
+                'error-message': 'Грешка при зареждане на данните за картата. Моля, опитайте отново по-късно.',
+                'language-name': 'Български'
+            }
+        };
+
+        // Get user's preferred language from localStorage or default to English
+        let currentLanguage = localStorage.getItem('quizLanguage') || 'en';
+        document.documentElement.lang = currentLanguage;
+
+        // Bulgarian country names (load conditionally)
+        let countryNamesBG = {};
+
+        // Function to update all translated elements
+        function updateLanguage() {
+            document.documentElement.lang = currentLanguage;
+
+            // Update title
+            document.title = translations[currentLanguage]['title'];
+
+            // Update all elements with data-i18n attribute
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (translations[currentLanguage][key]) {
+                    if (element.tagName === 'INPUT' && element.type === 'submit') {
+                        element.value = translations[currentLanguage][key];
+                    } else {
+                        element.textContent = translations[currentLanguage][key];
+                    }
+                }
+            });
+
+            // Language button removed
+        }
+
+        // Toggle language function
+        function toggleLanguage() {
+            currentLanguage = currentLanguage === 'en' ? 'bg' : 'en';
+            localStorage.setItem('quizLanguage', currentLanguage);
+
+            // If switching to Bulgarian, make sure we have the country names
+            if (currentLanguage === 'bg' && Object.keys(countryNamesBG).length === 0) {
+                loadBulgarianNames();
+            } else {
+                updateLanguage();
+            }
+        }
+
+        // Function to load Bulgarian country names
+        function loadBulgarianNames() {
+            const script = document.createElement('script');
+            script.src = 'bulgarian-country-names.js';
+            document.head.appendChild(script);
+            script.onload = function () {
+                // This will be defined in the bulgarian-country-names.js file
+                updateLanguage();
+            };
+        }
+
+        // Initialize language
+        if (currentLanguage === 'bg') {
+            loadBulgarianNames();
+        } else {
+            updateLanguage();
+        }
+
+        // Language switching is now only available on the index page
+    </script>
+
+    <!-- Game Logic -->
     <script>
         let score = 0;
         function updateScore(points) {
             score += points;
             document.getElementById('score-value').textContent = score;
         }
-
-        // countryToISOCode is now imported from country-codes.js
 
         // Function to get the correct flag URL using ISO codes
         function getCountryFlagURL(countryName) {
@@ -84,7 +132,7 @@
             if (isoCode) {
                 return `https://flagcdn.com/w40/${isoCode}.png`;
             } else {
-                // Fallback to the original approach (which doesn't work)
+                // Fallback to the original approach
                 console.warn(`Warning: No ISO code found for ${countryName}, using fallback method`);
                 return `https://flagcdn.com/w40/${countryName.toLowerCase().replace(/ /g, '-')}.png`;
             }
@@ -180,14 +228,20 @@
                         if (feature.properties && feature.properties.name) {
                             const countryName = feature.properties.name;
                             countryStatus[countryName] = false; // Initially not answered
+
                             layer.on('click', function () {
                                 // If already answered, show popup with correct name and user's guess
                                 if (countryStatus[countryName]) {
-                                    const userGuess = userGuesses[countryName] || "No guess";
+                                    const userGuess = userGuesses[countryName] || translations[currentLanguage]['no-guess'];
+
+                                    // Get localized country name if available
+                                    const localizedCountryName = currentLanguage === 'bg' && countryNamesBG ?
+                                        (countryNamesBG[countryName] || countryName) : countryName;
+
                                     const popupContent = `
                                         <div>
-                                            <p><strong>Country:</strong> ${countryName}</p>
-                                            <p><strong>Your guess:</strong> ${userGuess}</p>
+                                            <p><strong>${translations[currentLanguage]['country-label']}:</strong> ${localizedCountryName}</p>
+                                            <p><strong>${translations[currentLanguage]['your-guess']}:</strong> ${userGuess}</p>
                                         </div>
                                     `;
                                     layer.bindPopup(popupContent).openPopup();
@@ -196,9 +250,9 @@
 
                                 const popupContent = document.createElement('div');
                                 popupContent.innerHTML = `
-                                    <label for='input-${countryName}'>Enter country name:</label>
+                                    <label for='input-${countryName}'>${translations[currentLanguage]['enter-country']}</label>
                                     <input type='text' id='input-${countryName}' name='input-${countryName}' />
-                                    <button>Submit</button>
+                                    <button>${translations[currentLanguage]['submit']}</button>
                                     <p id='result-${countryName}'></p>
                                 `;
 
@@ -223,24 +277,35 @@
 
                                 layer.bindPopup(popupContent).openPopup();
                             });
-                            layer.countryLayer = layer; // Store reference to layer
                         }
                     }
                 }).addTo(map);
             })
             .catch(error => {
                 console.error('Error loading GeoJSON data:', error);
-                document.getElementById('map').innerHTML = '<p>Error loading map data. Please try again later.</p>';
+                document.getElementById('map').innerHTML = `<p>${translations[currentLanguage]['error-message']}</p>`;
             });
 
         function checkCountry(countryName, layer) {
             const inputElement = document.getElementById(`input-${countryName}`);
             const resultElement = document.getElementById(`result-${countryName}`);
+
             if (inputElement) {
                 const userInput = inputElement.value.trim().toLowerCase();
-                const correctName = countryName.trim().toLowerCase();
-                const isCorrect = userInput === correctName;
-                resultElement.textContent = correctName;
+                let isCorrect = false;
+
+                // Get the localized name based on current language
+                if (currentLanguage === 'bg' && countryNamesBG) {
+                    const countryNameBG = countryNamesBG[countryName] || countryName;
+                    const correctName = countryNameBG.trim().toLowerCase();
+                    // Check if input matches either Bulgarian or English name
+                    isCorrect = (userInput === correctName) || (userInput === countryName.trim().toLowerCase());
+                    resultElement.textContent = countryNameBG;
+                } else {
+                    const correctName = countryName.trim().toLowerCase();
+                    isCorrect = userInput === correctName;
+                    resultElement.textContent = correctName;
+                }
 
                 // Store the user's guess
                 userGuesses[countryName] = userInput;

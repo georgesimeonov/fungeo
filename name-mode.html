@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="title">Geography Quiz - Flag Mode</title>
+    <title data-i18n="title">Geography Quiz - Name Mode</title>
 
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
@@ -15,11 +15,11 @@
 <body>
     <div id="score"><span data-i18n="score-label">Score</span>: <span id="score-value">0</span></div>
     <a href="index.html" id="home-button" data-i18n="back-button">← Back to Menu</a>
-    <div id="flag-container">
-        <div id="flag-prompt" data-i18n="find-country">Find this country on the map</div>
-        <img id="flag-image" src="" alt="Country flag">
+    <div id="name-container">
+        <div id="name-prompt" data-i18n="find-country">Find this country on the map</div>
+        <div id="country-name" class="country-name-display"></div>
         <div id="result-message"></div>
-        <button id="next-flag" data-i18n="next-flag">Next Flag</button>
+        <button id="next-name" data-i18n="next-country">Next Country</button>
     </div>
     <div id="map"></div>
 
@@ -37,11 +37,11 @@
         // Translations for UI elements
         const translations = {
             'en': {
-                'title': 'Geography Quiz - Flag Mode',
+                'title': 'Geography Quiz - Name Mode',
                 'score-label': 'Score',
                 'back-button': '← Back to Menu',
                 'find-country': 'Find this country on the map',
-                'next-flag': 'Next Flag',
+                'next-country': 'Next Country',
                 'no-guess': 'No guess',
                 'country-label': 'Country',
                 'your-guess': 'Your guess',
@@ -51,11 +51,11 @@
                 'incorrect': 'Incorrect! That was'
             },
             'bg': {
-                'title': 'Географска Викторина - Режим с флагове',
+                'title': 'Географска Викторина - Режим с имена',
                 'score-label': 'Резултат',
                 'back-button': '← Обратно към меню',
                 'find-country': 'Намерете тази държава на картата',
-                'next-flag': 'Следващ флаг',
+                'next-country': 'Следваща държава',
                 'no-guess': 'Няма предположение',
                 'country-label': 'Държава',
                 'your-guess': 'Вашето предположение',
@@ -116,6 +116,11 @@
             script.onload = function () {
                 // This will be defined in the bulgarian-country-names.js file
                 updateLanguage();
+
+                // Update the country name if a country is already selected
+                if (currentCountry) {
+                    updateCountryNameDisplay();
+                }
             };
         }
 
@@ -152,18 +157,19 @@
             return array;
         }
 
-        // Get flag URL from ISO code
-        function getFlagUrl(countryName) {
-            const isoCode = countryToISOCode[countryName];
-            if (!isoCode) {
-                console.warn(`No ISO code found for ${countryName}`);
-                return '';
+        // Update the country name display based on current language
+        function updateCountryNameDisplay() {
+            const countryNameElement = document.getElementById('country-name');
+
+            if (currentLanguage === 'bg' && countryNamesBG && countryNamesBG[currentCountry]) {
+                countryNameElement.textContent = countryNamesBG[currentCountry];
+            } else {
+                countryNameElement.textContent = currentCountry;
             }
-            return `https://flagcdn.com/w160/${isoCode}.png`;
         }
 
         // Choose the next country to guess
-        function selectNextFlag() {
+        function selectNextCountry() {
             // Reset the map and game state
             resetMapLayers(geoJsonLayer);
             isGameActive = true;
@@ -174,22 +180,14 @@
             resultMessage.className = '';
 
             // Hide the next button
-            document.getElementById('next-flag').style.display = 'none';
+            document.getElementById('next-name').style.display = 'none';
 
-            // Select a random country that has an ISO code (for flag display)
+            // Select a random country that has an ISO code
             const validCountries = availableCountries.filter(country => countryToISOCode[country]);
             currentCountry = validCountries[Math.floor(Math.random() * validCountries.length)];
 
-            // Display the country's flag
-            const flagImage = document.getElementById('flag-image');
-            flagImage.src = getFlagUrl(currentCountry);
-
-            // Set appropriate alt text based on language
-            if (currentLanguage === 'bg' && countryNamesBG) {
-                flagImage.alt = `Флаг на ${countryNamesBG[currentCountry] || currentCountry}`;
-            } else {
-                flagImage.alt = `Flag of ${currentCountry}`;
-            }
+            // Display the country's name
+            updateCountryNameDisplay();
 
             // Reset the map view to show the whole world
             map.setView([20, 0], 2);
@@ -199,7 +197,7 @@
         function handleCountryClick(clickedCountry) {
             if (!isGameActive) return;
 
-            // Game is now inactive until next flag
+            // Game is now inactive until next country
             isGameActive = false;
 
             const isCorrect = clickedCountry === currentCountry;
@@ -257,11 +255,11 @@
             }
 
             // Show next button
-            document.getElementById('next-flag').style.display = 'block';
+            document.getElementById('next-name').style.display = 'block';
         }
 
-        // Event listener for next flag button
-        document.getElementById('next-flag').addEventListener('click', selectNextFlag);
+        // Event listener for next country button
+        document.getElementById('next-name').addEventListener('click', selectNextCountry);
 
         const map = L.map('map', {
             center: [20, 0],
@@ -312,7 +310,7 @@
                 availableCountries = shuffleArray(availableCountries);
 
                 // Start the game once the map is loaded
-                selectNextFlag();
+                selectNextCountry();
             })
             .catch(error => {
                 console.error('Error loading GeoJSON data:', error);

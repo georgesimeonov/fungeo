@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Geography Quiz Game</title>
+    <link rel="stylesheet" href="styles.css">
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -18,125 +19,173 @@
             justify-content: center;
         }
 
-        .container {
-            background-color: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            padding: 2rem;
-            max-width: 900px;
-            width: 90%;
-            text-align: center;
-        }
-
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 1rem;
-        }
-
-        p {
-            color: #7f8c8d;
-            margin-bottom: 2rem;
-            line-height: 1.6;
-        }
-
+        /* Make the game modes grid 2x2 */
         .game-modes {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 2rem;
             margin-bottom: 2rem;
+            max-width: 800px;
         }
 
-        .mode-card {
-            background-color: #f9f9f9;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            width: 260px;
-            padding: 1.5rem;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .mode-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .mode-card h2 {
-            color: #3498db;
-            margin-top: 0;
-        }
-
-        .mode-card img {
-            width: 100%;
-            height: 160px;
-            object-fit: cover;
-            border-radius: 4px;
-            margin-bottom: 1rem;
-        }
-
-        .mode-card p {
-            margin-bottom: 1rem;
-        }
-
-        .play-button {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 0.75rem 1.5rem;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .play-button:hover {
-            background-color: #2980b9;
-        }
-
-        footer {
-            margin-top: 2rem;
-            color: #95a5a6;
-            font-size: 0.9rem;
+        @media (max-width: 768px) {
+            .game-modes {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 
-<body>
+<body class="index-page">
+    <div class="language-selector">
+        <button id="en-btn" class="language-btn active" onclick="changeLanguage('en')">
+            <img src="https://flagcdn.com/w40/gb.png" alt="English" width="20" height="14">
+            English
+        </button>
+        <button id="bg-btn" class="language-btn" onclick="changeLanguage('bg')">
+            <img src="https://flagcdn.com/w40/bg.png" alt="Български" width="20" height="14">
+            Български
+        </button>
+    </div>
+
     <div class="container">
-        <h1>Geography Quiz Game</h1>
-        <p>Test your knowledge of world geography with our interactive map game!</p>
+        <h1 id="title">Geography Quiz Game</h1>
+        <p id="description">Test your knowledge of world geography with our interactive map game!</p>
 
         <div class="game-modes">
             <div class="mode-card">
-                <img src="/api/placeholder/260/160" alt="Flag mode illustration">
-                <h2>Mode 1: Flag Challenge</h2>
-                <p>A random country flag appears at the top of the screen. Find and click on the correct country on the
-                    map.</p>
-                <button class="play-button" onclick="window.location.href='flag-mode.html'">Play Flag Mode</button>
+                <h2 id="mode1-title">Flag Challenge</h2>
+                <p id="mode1-desc">A random country flag appears at the top of the screen. Find and click on the correct
+                    country on the map.</p>
+                <button id="mode1-button" class="play-button" onclick="playMode('flag')">Play Flag Mode</button>
             </div>
 
             <div class="mode-card">
-                <img src="/api/placeholder/260/160" alt="Country mode illustration">
-                <h2>Mode 2: Country Quiz</h2>
-                <p>Click on countries and type their names. Test how many countries you can identify correctly!</p>
-                <button class="play-button" onclick="window.location.href='country-mode.html'">Play Country
+                <h2 id="mode2-title">Country Quiz</h2>
+                <p id="mode2-desc">Click on countries and type their names. Test how many countries you can identify
+                    correctly!</p>
+                <button id="mode2-button" class="play-button" onclick="playMode('country')">Play Country Mode</button>
+            </div>
+
+            <div class="mode-card">
+                <h2 id="mode3-title">Highlight Challenge</h2>
+                <p id="mode3-desc">A random country is highlighted on the map. Can you name it correctly? Test your
+                    knowledge!</p>
+                <button id="mode3-button" class="play-button" onclick="playMode('highlight')">Play Highlight
                     Mode</button>
             </div>
 
             <div class="mode-card">
-                <img src="/api/placeholder/260/160" alt="Highlight mode illustration">
-                <h2>Mode 3: Highlight Challenge</h2>
-                <p>A random country is highlighted on the map. Can you name it correctly? Test your knowledge!</p>
-                <button class="play-button" onclick="window.location.href='highlight-mode.html'">Play Highlight
-                    Mode</button>
+                <h2 id="mode4-title">Name Challenge</h2>
+                <p id="mode4-desc">A country name appears at the top of the screen. Find and click on the correct
+                    country on the map.</p>
+                <button id="mode4-button" class="play-button" onclick="playMode('name')">Play Name Mode</button>
             </div>
         </div>
 
         <footer>
-            Geography Quiz Game &copy; 2025
+            <span id="footer-text">Geography Quiz Game</span> &copy; 2025
         </footer>
     </div>
+
+    <script>
+        // Language translations
+        const translations = {
+            en: {
+                title: "Geography Quiz Game",
+                description: "Test your knowledge of world geography with our interactive map game!",
+                mode1Title: "Flag Challenge",
+                mode1Desc: "A random country flag appears at the top of the screen. Find and click on the correct country on the map.",
+                mode1Button: "Play Flag Mode",
+                mode2Title: "Country Quiz",
+                mode2Desc: "Click on countries and type their names. Test how many countries you can identify correctly!",
+                mode2Button: "Play Country Mode",
+                mode3Title: "Highlight Challenge",
+                mode3Desc: "A random country is highlighted on the map. Can you name it correctly? Test your knowledge!",
+                mode3Button: "Play Highlight Mode",
+                mode4Title: "Name Challenge",
+                mode4Desc: "A country name appears at the top of the screen. Find and click on the correct country on the map.",
+                mode4Button: "Play Name Mode",
+                footerText: "Geography Quiz Game"
+            },
+            bg: {
+                title: "Географска Викторина",
+                description: "Проверете познанията си по световна география с нашата интерактивна карта!",
+                mode1Title: "Предизвикателство с флагове",
+                mode1Desc: "В горната част на екрана се появява флаг на случайна държава. Намерете и кликнете върху правилната държава на картата.",
+                mode1Button: "Играй с флагове",
+                mode2Title: "Държавна викторина",
+                mode2Desc: "Кликнете върху държави и въведете техните имена. Проверете колко държави можете да идентифицирате правилно!",
+                mode2Button: "Играй с държави",
+                mode3Title: "Маркирай държавата",
+                mode3Desc: "На картата е маркирана случайна държава. Можете ли да я назовете правилно? Проверете знанията си!",
+                mode3Button: "Играй с маркирани държави",
+                mode4Title: "Предизвикателство с имена",
+                mode4Desc: "В горната част на екрана се появява име на държава. Намерете и кликнете върху правилната държава на картата.",
+                mode4Button: "Играй с имена",
+                footerText: "Географска Викторина"
+            }
+        };
+
+        // Set current language - default to English
+        let currentLanguage = localStorage.getItem('quizLanguage') || 'en';
+        localStorage.setItem('quizLanguage', currentLanguage);
+
+        // Update UI with current language
+        function updateUI() {
+            const lang = translations[currentLanguage];
+
+            // Update main text elements
+            document.getElementById('title').textContent = lang.title;
+            document.getElementById('description').textContent = lang.description;
+
+            // Update mode 1
+            document.getElementById('mode1-title').textContent = lang.mode1Title;
+            document.getElementById('mode1-desc').textContent = lang.mode1Desc;
+            document.getElementById('mode1-button').textContent = lang.mode1Button;
+
+            // Update mode 2
+            document.getElementById('mode2-title').textContent = lang.mode2Title;
+            document.getElementById('mode2-desc').textContent = lang.mode2Desc;
+            document.getElementById('mode2-button').textContent = lang.mode2Button;
+
+            // Update mode 3
+            document.getElementById('mode3-title').textContent = lang.mode3Title;
+            document.getElementById('mode3-desc').textContent = lang.mode3Desc;
+            document.getElementById('mode3-button').textContent = lang.mode3Button;
+
+            // Update mode 4
+            document.getElementById('mode4-title').textContent = lang.mode4Title;
+            document.getElementById('mode4-desc').textContent = lang.mode4Desc;
+            document.getElementById('mode4-button').textContent = lang.mode4Button;
+
+            // Update footer
+            document.getElementById('footer-text').textContent = lang.footerText;
+
+            // Update button states
+            document.getElementById('en-btn').classList.toggle('active', currentLanguage === 'en');
+            document.getElementById('bg-btn').classList.toggle('active', currentLanguage === 'bg');
+
+            // Update HTML lang attribute
+            document.documentElement.lang = currentLanguage;
+        }
+
+        // Change language
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            localStorage.setItem('quizLanguage', lang);
+            updateUI();
+        }
+
+        // Play selected mode
+        function playMode(mode) {
+            // Fixed: Use the correct filenames without language prefixes
+            window.location.href = `${mode}-mode.html`;
+        }
+
+        // Initialize UI with stored language preference
+        updateUI();
+    </script>
 </body>
 
 </html>

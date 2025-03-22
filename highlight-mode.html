@@ -1,150 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Geography Quiz - Highlight Mode</title>
+    <title data-i18n="title">Geography Quiz - Country Mode</title>
 
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
 
-    <style>
-        html,
-        body {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            width: 100%;
-        }
-
-        #map {
-            width: 100%;
-            height: 100vh;
-        }
-
-        #score {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: white;
-            padding: 10px;
-            font-size: 18px;
-            font-weight: bold;
-            border-radius: 5px;
-            z-index: 1000;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        #home-button {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: white;
-            padding: 8px 12px;
-            font-size: 14px;
-            border-radius: 5px;
-            z-index: 1000;
-            text-decoration: none;
-            color: #333;
-            font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        #home-button:hover {
-            background: #f0f0f0;
-        }
-
-        #guess-container {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: white;
-            padding: 15px 20px;
-            border-radius: 5px;
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            min-width: 300px;
-        }
-
-        #guess-prompt {
-            font-weight: bold;
-            font-size: 16px;
-            margin-bottom: 10px;
-            text-align: center;
-        }
-
-        #guess-input {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-
-        #submit-guess {
-            padding: 8px 16px;
-            background: #3498db;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-
-        #submit-guess:hover {
-            background: #2980b9;
-        }
-
-        #next-country {
-            padding: 8px 16px;
-            background: #2ecc71;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            display: none;
-        }
-
-        #next-country:hover {
-            background: #27ae60;
-        }
-
-        #result-message {
-            margin-top: 5px;
-            font-size: 14px;
-            font-weight: bold;
-            min-height: 18px;
-            text-align: center;
-        }
-
-        .correct {
-            color: green;
-        }
-
-        .incorrect {
-            color: red;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-    <div id="score">Score: <span id="score-value">0</span></div>
-    <a href="index.html" id="home-button">← Back to Menu</a>
-    <div id="guess-container">
-        <div id="guess-prompt">Name the highlighted country</div>
-        <input type="text" id="guess-input" placeholder="Enter country name...">
-        <button id="submit-guess">Submit Guess</button>
-        <div id="result-message"></div>
-        <button id="next-country">Next Country</button>
-    </div>
+    <div id="score"><span data-i18n="score-label">Score</span>: <span id="score-value">0</span></div>
+    <a href="index.html" id="home-button" data-i18n="back-button">← Back to Menu</a>
     <div id="map"></div>
 
     <!-- Leaflet JavaScript -->
@@ -153,163 +23,127 @@
     <!-- Country Codes -->
     <script src="country-codes.js"></script>
 
+    <!-- Map Interactions -->
+    <script src="map-interactions.js"></script>
+
+    <!-- Language Translations -->
+    <script>
+        // Translations for UI elements
+        const translations = {
+            'en': {
+                'title': 'Geography Quiz - Country Mode',
+                'score-label': 'Score',
+                'back-button': '← Back to Menu',
+                'enter-country': 'Enter country name:',
+                'submit': 'Submit',
+                'no-guess': 'No guess',
+                'country-label': 'Country',
+                'your-guess': 'Your guess',
+                'error-message': 'Error loading map data. Please try again later.',
+                'language-name': 'English'
+            },
+            'bg': {
+                'title': 'Географска Викторина - Режим с държави',
+                'score-label': 'Резултат',
+                'back-button': '← Обратно към меню',
+                'enter-country': 'Въведете име на държава:',
+                'submit': 'Изпрати',
+                'no-guess': 'Няма предположение',
+                'country-label': 'Държава',
+                'your-guess': 'Вашето предположение',
+                'error-message': 'Грешка при зареждане на данните за картата. Моля, опитайте отново по-късно.',
+                'language-name': 'Български'
+            }
+        };
+
+        // Get user's preferred language from localStorage or default to English
+        let currentLanguage = localStorage.getItem('quizLanguage') || 'en';
+        document.documentElement.lang = currentLanguage;
+
+        // Bulgarian country names (load conditionally)
+        let countryNamesBG = {};
+
+        // Function to update all translated elements
+        function updateLanguage() {
+            document.documentElement.lang = currentLanguage;
+
+            // Update title
+            document.title = translations[currentLanguage]['title'];
+
+            // Update all elements with data-i18n attribute
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (translations[currentLanguage][key]) {
+                    if (element.tagName === 'INPUT' && element.type === 'submit') {
+                        element.value = translations[currentLanguage][key];
+                    } else {
+                        element.textContent = translations[currentLanguage][key];
+                    }
+                }
+            });
+
+            // Language button removed
+        }
+
+        // Toggle language function
+        function toggleLanguage() {
+            currentLanguage = currentLanguage === 'en' ? 'bg' : 'en';
+            localStorage.setItem('quizLanguage', currentLanguage);
+
+            // If switching to Bulgarian, make sure we have the country names
+            if (currentLanguage === 'bg' && Object.keys(countryNamesBG).length === 0) {
+                loadBulgarianNames();
+            } else {
+                updateLanguage();
+            }
+        }
+
+        // Function to load Bulgarian country names
+        function loadBulgarianNames() {
+            const script = document.createElement('script');
+            script.src = 'bulgarian-country-names.js';
+            document.head.appendChild(script);
+            script.onload = function () {
+                // This will be defined in the bulgarian-country-names.js file
+                updateLanguage();
+            };
+        }
+
+        // Initialize language
+        if (currentLanguage === 'bg') {
+            loadBulgarianNames();
+        } else {
+            updateLanguage();
+        }
+
+        // Language switching is now only available on the index page
+    </script>
+
+    <!-- Game Logic -->
     <script>
         let score = 0;
-        let currentCountry = null;
-        let countryLayers = {};
-        let availableCountries = [];
-        let geoJsonLayer = null;
-
         function updateScore(points) {
             score += points;
             document.getElementById('score-value').textContent = score;
         }
 
-        // Shuffle array (Fisher-Yates algorithm)
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
+        // Function to get the correct flag URL using ISO codes
+        function getCountryFlagURL(countryName) {
+            // Try to find the ISO code for the country
+            const isoCode = countryToISOCode[countryName];
 
-        // Reset map to original state
-        function resetMap() {
-            if (geoJsonLayer) {
-                geoJsonLayer.setStyle({
-                    fillColor: '#f0f0f0',
-                    fillOpacity: 0,
-                    color: '#000',
-                    weight: 1,
-                    opacity: 1
-                });
-            }
-        }
-
-        // Choose the next country to guess
-        function selectNextCountry() {
-            // Reset the map
-            resetMap();
-
-            // Clear input and result message
-            document.getElementById('guess-input').value = '';
-            const resultMessage = document.getElementById('result-message');
-            resultMessage.textContent = '';
-            resultMessage.className = '';
-
-            // Hide the next button and show submit button
-            document.getElementById('next-country').style.display = 'none';
-            document.getElementById('submit-guess').style.display = 'block';
-
-            // Re-enable input
-            document.getElementById('guess-input').disabled = false;
-
-            // Select a random country
-            currentCountry = availableCountries[Math.floor(Math.random() * availableCountries.length)];
-
-            // Highlight the selected country on the map
-            if (countryLayers[currentCountry]) {
-                countryLayers[currentCountry].setStyle({
-                    fillColor: '#3498db',
-                    fillOpacity: 0.6
-                });
-
-                // Get bounds of the selected country
-                const countryBounds = countryLayers[currentCountry].getBounds();
-
-                // Determine which continent to focus on based on country coordinates
-                let continentZoom = 4; // Default zoom level for continents
-                let continentCenter = countryBounds.getCenter();
-
-                // Adjust zoom based on continent size and location
-                const lat = continentCenter.lat;
-                const lng = continentCenter.lng;
-
-                // Rough continent determination based on coordinates
-                if (lng > -20 && lng < 40 && lat > 30 && lat < 75) {
-                    // Europe
-                    continentZoom = 4;
-                } else if (lng > -20 && lng < 55 && lat > -40 && lat < 40) {
-                    // Africa
-                    continentZoom = 3;
-                } else if (lng > 55 && lng < 150 && lat > 0 && lat < 55) {
-                    // Asia
-                    continentZoom = 3;
-                } else if (lng > 110 && lng < 180 && lat > -50 && lat < 0) {
-                    // Oceania
-                    continentZoom = 4;
-                } else if (lng > -170 && lng < -30 && lat > 15 && lat < 75) {
-                    // North America
-                    continentZoom = 3;
-                } else if (lng > -90 && lng < -30 && lat > -60 && lat < 15) {
-                    // South America
-                    continentZoom = 3;
-                }
-
-                // Set the view with a gentler zoom level
-                map.setView(continentCenter, continentZoom);
-            }
-        }
-
-        // Handle submit guess
-        function submitGuess() {
-            const guessInput = document.getElementById('guess-input');
-            const userGuess = guessInput.value.trim();
-
-            if (!userGuess) return; // Don't process empty guesses
-
-            const isCorrect = userGuess.toLowerCase() === currentCountry.toLowerCase();
-
-            // Update the score
-            updateScore(isCorrect ? 1 : -1);
-
-            // Show result message
-            const resultMessage = document.getElementById('result-message');
-            if (isCorrect) {
-                resultMessage.textContent = 'Correct!';
-                resultMessage.className = 'correct';
-
-                // Highlight the country in green
-                if (countryLayers[currentCountry]) {
-                    countryLayers[currentCountry].setStyle({
-                        fillColor: 'green',
-                        fillOpacity: 0.6
-                    });
-                }
+            if (isoCode) {
+                return `https://flagcdn.com/w40/${isoCode}.png`;
             } else {
-                resultMessage.textContent = `Incorrect! That was ${currentCountry}`;
-                resultMessage.className = 'incorrect';
-
-                // Highlight the country in red
-                if (countryLayers[currentCountry]) {
-                    countryLayers[currentCountry].setStyle({
-                        fillColor: 'red',
-                        fillOpacity: 0.6
-                    });
-                }
+                // Fallback to the original approach
+                console.warn(`Warning: No ISO code found for ${countryName}, using fallback method`);
+                return `https://flagcdn.com/w40/${countryName.toLowerCase().replace(/ /g, '-')}.png`;
             }
-
-            // Disable input and show next button
-            guessInput.disabled = true;
-            document.getElementById('submit-guess').style.display = 'none';
-            document.getElementById('next-country').style.display = 'block';
         }
-
-        // Event listeners
-        document.getElementById('submit-guess').addEventListener('click', submitGuess);
-        document.getElementById('next-country').addEventListener('click', selectNextCountry);
-
-        // Allow Enter key to submit guess
-        document.getElementById('guess-input').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                submitGuess();
-            }
-        });
 
         const map = L.map('map', {
-            center: [20, 0],
-            zoom: 2,
+            center: [50, 10],
+            zoom: 4,
             zoomControl: true,
             dragging: true,
             boxZoom: true,
@@ -318,10 +152,75 @@
             touchZoom: true
         });
 
+        // Add the Leaflet.GeometryUtil extension for area calculations
+        L.GeometryUtil = {
+            // Calculate approximate area of a polygon
+            geodesicArea: function (latLngs) {
+                let area = 0;
+                const d2r = Math.PI / 180;
+                let p1, p2;
+
+                for (let i = 0, len = latLngs.length, j = len - 1; i < len; j = i++) {
+                    const p1 = latLngs[i];
+                    const p2 = latLngs[j];
+                    area += ((p2.lng - p1.lng) * d2r) *
+                        (2 + Math.sin(p1.lat * d2r) + Math.sin(p2.lat * d2r));
+                }
+                return Math.abs(area * 6378137.0 * 6378137.0 / 2.0);
+            }
+        };
+
+        // Initialize flag markers array
+        window.flagMarkers = [];
+
+        // Add zoom handler to resize all flags when zooming
+        map.on('zoomend', function () {
+            const zoom = map.getZoom();
+            // Calculate size based on zoom level
+            window.flagMarkers.forEach(flag => {
+                // Base size depends on country size
+                const baseSize = flag.isSmallCountry ? [20, 15] : [30, 22];
+
+                // Hide flags completely when zoomed out too far (zoom level 2 or lower)
+                if (zoom <= 2) {
+                    flag.marker.setOpacity(0);
+                    return;
+                } else {
+                    flag.marker.setOpacity(1);
+                }
+
+                // Scale factor based on zoom (bigger at higher zoom levels)
+                let scale = 1.0;
+                if (zoom > 4) {
+                    // Increase size when zooming in
+                    scale = 1.0 + ((zoom - 4) * 0.12);
+                } else if (zoom < 4) {
+                    // Decrease size more aggressively when zooming out
+                    scale = 1.0 - ((4 - zoom) * 0.25);
+                }
+
+                // Calculate new size with lower minimum size
+                const newWidth = Math.max(6, Math.min(50, baseSize[0] * scale));
+                const newHeight = Math.max(4, Math.min(37, baseSize[1] * scale));
+
+                // Update the icon
+                const newIcon = L.icon({
+                    iconUrl: flag.url,
+                    iconSize: [newWidth, newHeight],
+                    iconAnchor: [newWidth / 2, newHeight / 2]
+                });
+
+                flag.marker.setIcon(newIcon);
+            });
+        });
+
+        const countryStatus = {}; // Track answered countries
+        const userGuesses = {}; // Store user's guesses for each country
+
         fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
             .then(response => response.json())
             .then(data => {
-                geoJsonLayer = L.geoJSON(data, {
+                const geoJsonLayer = L.geoJSON(data, {
                     style: {
                         color: '#000',
                         weight: 1,
@@ -331,29 +230,160 @@
                     onEachFeature: function (feature, layer) {
                         if (feature.properties && feature.properties.name) {
                             const countryName = feature.properties.name;
+                            countryStatus[countryName] = false; // Initially not answered
 
-                            // Store the country layer for later reference
-                            countryLayers[countryName] = layer;
+                            layer.on('click', function () {
+                                // If already answered, show popup with correct name and user's guess
+                                if (countryStatus[countryName]) {
+                                    const userGuess = userGuesses[countryName] || translations[currentLanguage]['no-guess'];
 
-                            // Add to available countries if it has a valid ISO code
-                            // This ensures we only use countries that we can properly identify
-                            if (countryToISOCode[countryName]) {
-                                availableCountries.push(countryName);
-                            }
+                                    // Get localized country name if available
+                                    const localizedCountryName = currentLanguage === 'bg' && countryNamesBG ?
+                                        (countryNamesBG[countryName] || countryName) : countryName;
+
+                                    const popupContent = `
+                                        <div>
+                                            <p><strong>${translations[currentLanguage]['country-label']}:</strong> ${localizedCountryName}</p>
+                                            <p><strong>${translations[currentLanguage]['your-guess']}:</strong> ${userGuess}</p>
+                                        </div>
+                                    `;
+                                    layer.bindPopup(popupContent).openPopup();
+                                    return;
+                                }
+
+                                const popupContent = document.createElement('div');
+                                popupContent.innerHTML = `
+                                    <label for='input-${countryName}'>${translations[currentLanguage]['enter-country']}</label>
+                                    <input type='text' id='input-${countryName}' name='input-${countryName}' />
+                                    <button>${translations[currentLanguage]['submit']}</button>
+                                    <p id='result-${countryName}'></p>
+                                `;
+
+                                const inputElement = popupContent.querySelector(`input`);
+                                const buttonElement = popupContent.querySelector(`button`);
+
+                                const closePopup = () => {
+                                    map.closePopup();
+                                };
+
+                                buttonElement.onclick = () => {
+                                    checkCountry(countryName, layer);
+                                    closePopup();
+                                };
+
+                                inputElement.addEventListener('keypress', (event) => {
+                                    if (event.key === 'Enter') {
+                                        checkCountry(countryName, layer);
+                                        closePopup();
+                                    }
+                                });
+
+                                layer.bindPopup(popupContent).openPopup();
+                            });
+
+                            // Add hover effects using the shared function
+                            addCountryHoverEffects(layer, true);
                         }
                     }
                 }).addTo(map);
-
-                // Shuffle the countries to ensure random selection
-                availableCountries = shuffleArray(availableCountries);
-
-                // Start the game once the map is loaded
-                selectNextCountry();
             })
             .catch(error => {
                 console.error('Error loading GeoJSON data:', error);
-                document.getElementById('map').innerHTML = '<p>Error loading map data. Please try again later.</p>';
+                document.getElementById('map').innerHTML = `<p>${translations[currentLanguage]['error-message']}</p>`;
             });
+
+        function checkCountry(countryName, layer) {
+            const inputElement = document.getElementById(`input-${countryName}`);
+            const resultElement = document.getElementById(`result-${countryName}`);
+
+            if (inputElement) {
+                const userInput = inputElement.value.trim().toLowerCase();
+                let isCorrect = false;
+
+                // Get the localized name based on current language
+                if (currentLanguage === 'bg' && countryNamesBG) {
+                    const countryNameBG = countryNamesBG[countryName] || countryName;
+                    const correctName = countryNameBG.trim().toLowerCase();
+                    // Check if input matches either Bulgarian or English name
+                    isCorrect = (userInput === correctName) || (userInput === countryName.trim().toLowerCase());
+                    resultElement.textContent = countryNameBG;
+                } else {
+                    const correctName = countryName.trim().toLowerCase();
+                    isCorrect = userInput === correctName;
+                    resultElement.textContent = correctName;
+                }
+
+                // Store the user's guess
+                userGuesses[countryName] = userInput;
+
+                map.eachLayer(l => {
+                    if (l.feature && l.feature.properties.name === countryName) {
+                        l.setStyle({
+                            fillColor: isCorrect ? 'green' : 'red',
+                            fillOpacity: 0.5
+                        });
+                        countryStatus[countryName] = true; // Mark as answered  
+                        l.unbindPopup(); // Remove popup binding
+
+                        // Add flag marker for both correct and incorrect guesses
+                        const flagUrl = getCountryFlagURL(countryName);
+
+                        // For smaller countries, use a smaller flag initially
+                        const countryArea = L.GeometryUtil.geodesicArea(l.getLatLngs()[0]);
+                        // Create size tiers for different country sizes
+                        let countrySizeTier;
+                        if (countryArea < 500000) {
+                            countrySizeTier = "tiny";
+                        } else if (countryArea < 1000000) {
+                            countrySizeTier = "small";
+                        } else if (countryArea < 5000000) {
+                            countrySizeTier = "medium";
+                        } else {
+                            countrySizeTier = "large";
+                        }
+
+                        // Initial size based on country size tiers
+                        let initialSize;
+                        switch (countrySizeTier) {
+                            case "tiny":
+                                initialSize = [12, 9];
+                                break;
+                            case "small":
+                                initialSize = [16, 12];
+                                break;
+                            case "medium":
+                                initialSize = [20, 15];
+                                break;
+                            case "large":
+                                initialSize = [24, 18];
+                                break;
+                        }
+
+                        // Store the country size information
+                        const smallCountry = countrySizeTier === "tiny" || countrySizeTier === "small";
+
+                        // Create the icon with appropriate size
+                        const flagIcon = L.icon({
+                            iconUrl: flagUrl,
+                            iconSize: initialSize,
+                            iconAnchor: [initialSize[0] / 2, initialSize[1] / 2]
+                        });
+
+                        // Add the marker to the map
+                        const flagMarker = L.marker(l.getBounds().getCenter(), { icon: flagIcon }).addTo(map);
+
+                        // Store marker info for zoom handling
+                        window.flagMarkers.push({
+                            marker: flagMarker,
+                            url: flagUrl,
+                            isSmallCountry: smallCountry
+                        });
+                    }
+                });
+
+                updateScore(isCorrect ? 1 : -1);
+            }
+        }
     </script>
 </body>
 
